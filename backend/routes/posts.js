@@ -1,14 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const User = "../models/User";
+const Post = require("../models/Post");
 
 //GET tutti i post
 router.get("/", async (req, res) => {
     try {
         const posts = await Post.find().populate("author", "firstName lastName"); //popoliamo i campi dell'autore
+        console.log('ciao');
         res.json(posts);
     } catch (error) {
-        res.status(500).json({error: err.message})
+        res.status(500).json({error: error.message})
     }
 });
 
@@ -21,7 +22,7 @@ router.get("/:id", async (req,res) => {
         }
         res.json(post);
     } catch (error) {   
-        res.status(500).jsom({error: err.message});
+        res.status(500).json({error: error.message});
     }
 });
 
