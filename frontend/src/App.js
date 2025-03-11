@@ -7,6 +7,8 @@ import NavBar from './components/Navbar';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
+import CreatePost from './pages/CreatePost';
+import PostDetails from './pages/PostDetails';
 
 
 function App() {
@@ -23,6 +25,8 @@ function App() {
                 <Route path="/login" element={<Login />}/>
                 <Route path="/register" element={<Register />}/>
                 <Route path="/" element={<Home />} />
+                <Route path="/posts/create" element={<CreatePost />}/>
+                <Route path="/posts/:id" element={<PostDetails />} />
               </Routes>
             </Container>
         </AuthProvider>

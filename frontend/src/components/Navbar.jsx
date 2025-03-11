@@ -13,13 +13,18 @@ const NavBar = () => {
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="me-auto">
                         <Link to="/" className="nav-link">Home</Link>
-                        <Link to="/posts" className="nav-link">Posts</Link>
-                        <Link to="/users" className="nav-link">Users</Link>
+                        {/* <Link to="/posts" className="nav-link">Posts</Link>
+                        <Link to="/users" className="nav-link">Users</Link> */}
+                    </Nav>
+                    <Nav>
+                        { user && (
+                            <Nav.Link as={Link} to="/posts/create"> Create Post </Nav.Link>
+                        )}
                     </Nav>
                     {
                         user ? (
                             <>
-                                <span className="nav-link"> Benvenuto, {user.firstname}</span>
+                                <Nav> <span className="nav-link"> Benvenuto, {user.firstName}  </span> </Nav>
                                 <Link to="/" className="nav-link" onClick={logout}>Logout</Link>
                             </>
                         ) : (
