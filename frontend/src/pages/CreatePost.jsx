@@ -1,65 +1,91 @@
-import {useState} from 'react';
-import {useNavigate} from 'react-router-dom';
-import {useAuth} from '../contexts/AuthContext';
-import {Form, Button, Container, Row, Col, Alert} from 'react-bootstrap';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { Form, Button, Container, Row, Col, Alert, Spinner } from 'react-bootstrap';
 import axios from 'axios';
 
 const CreatePost = () => {
     const [formData, setFormData] = useState({
         title: "",
         category: "",
-        cover: "",
         content: "",
         readTime: {
-            value: "",
+            value: "1",  // Set default value
             unit: "minuti"
         }
     });
+    
+    const [coverImage, setCoverImage] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState("");
     const [error, setError] = useState("");
-    const {user} = useAuth();
+    const [loading, setLoading] = useState(false);
+    const { user } = useAuth();
     const navigate = useNavigate();
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 5000000) { // 5MB limit
+                setError("L'immagine non può superare i 5MB");
+                return;
+            }
+            setCoverImage(file);
+            setPreviewUrl(URL.createObjectURL(file));
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
+        setError("");
+        setLoading(true);
 
-            if(!user || !user._id){
+        try {
+            if (!user?._id) {
                 setError("Devi essere autenticato per creare un post!");
                 return;
             }
 
-            const postData = {
-                ...formData,
-                author: user._id,
-                readTime: {
-                    ...formData.readTime,
-                    value: parseInt(formData.readTime.value)
-                }
-            };
+            const formDataToSend = new FormData();
+            formDataToSend.append("title", formData.title.trim());
+            formDataToSend.append("category", formData.category.trim());
+            formDataToSend.append("cover", coverImage);
+            formDataToSend.append("content", formData.content.trim());
+            formDataToSend.append("author", user._id);
+            
+            // Parse readTime value as number and send as JSON string
+            const readTimeValue = parseInt(formData.readTime.value);
+            if (isNaN(readTimeValue) || readTimeValue < 1) {
+                setError("Il tempo di lettura deve essere un numero valido");
+                return;
+            }
 
-            await axios.post("http://localhost:3001/posts", postData);
+            formDataToSend.append("readTime", JSON.stringify({
+                value: readTimeValue.toString(),
+                unit: formData.readTime.unit
+            }));
+
+            await axios.post("http://localhost:3001/posts", formDataToSend, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
             navigate("/");
         } catch (error) {
-            console.error('Error details:', {
-                message: error.message,
-                response: error.response,
-                status: error.response?.status
-            });
-            
-            // Gestione più robusta dell'errore
-            if (error.response) {
-                // Errore del server con risposta
-                setError(error.response.data.message || 'Errore del server');
+            console.error('Error details:', error);
+            if (error.response?.data?.message) {
+                setError(error.response.data.message);
+            } else if (error.response) {
+                setError('Errore del server: ' + error.response.status);
             } else if (error.request) {
-                // Errore di rete - nessuna risposta ricevuta
                 setError('Errore di connessione al server');
             } else {
-                // Altro tipo di errore
-                setError('Si è verificato un errore');
+                setError('Si è verificato un errore durante la creazione del post');
             }
+        } finally {
+            setLoading(false);
         }
-    }
-    
+    };
 
     return (
         <Container className="mt-4">
@@ -97,17 +123,26 @@ const CreatePost = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label>Cover Image URL</Form.Label>
+                            <Form.Label>Cover Image</Form.Label>
                             <Form.Control
-                                type="text"
-                                name="cover"
-                                value={formData.cover}
-                                onChange={(e) => setFormData({
-                                    ...formData,
-                                    cover: e.target.value
-                                })}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageChange}
                                 required
                             />
+                            {previewUrl && (
+                                <img 
+                                    src={previewUrl} 
+                                    alt="Preview" 
+                                    className="mt-2" 
+                                    style={{
+                                        maxWidth: '100%',
+                                        height: 'auto',
+                                        maxHeight: '200px',
+                                        objectFit: 'cover'
+                                    }}
+                                />
+                            )}
                         </Form.Group>
 
                         <Form.Group className="mb-3">
@@ -131,6 +166,7 @@ const CreatePost = () => {
                                 <Col md={6}>
                                     <Form.Control
                                         type="number"
+                                        min="1"
                                         name="readTimeValue"
                                         value={formData.readTime.value}
                                         onChange={(e) => setFormData({
@@ -163,8 +199,26 @@ const CreatePost = () => {
                         </Form.Group>
 
                         <div className="d-grid gap-2">
-                            <Button variant="primary" type="submit">
-                                Create Post
+                            <Button 
+                                variant="primary" 
+                                type="submit"
+                                disabled={loading || !coverImage || !formData.title || !formData.content}
+                            >
+                                {loading ? (
+                                    <>
+                                        <Spinner
+                                            as="span"
+                                            animation="border"
+                                            size="sm"
+                                            role="status"
+                                            aria-hidden="true"
+                                            className="me-2"
+                                        />
+                                        Creazione in corso...
+                                    </>
+                                ) : (
+                                    'Create Post'
+                                )}
                             </Button>
                         </div>
                     </Form>
@@ -172,6 +226,6 @@ const CreatePost = () => {
             </Row>
         </Container>
     );
-}
+};
 
 export default CreatePost;

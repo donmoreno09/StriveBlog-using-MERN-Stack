@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Post = require("../models/Post");
+const {cloudinary, uploadCloud} = require("../utils/cloudinary");
 
 //GET tutti i post
 router.get("/", async (req, res) => {
@@ -48,36 +49,41 @@ router.get("/:id", async (req,res) => {
 });
 
 //POST
-router.post("/", async (req, res) => {
+router.post("/", uploadCloud.single('cover'), async (req, res) => {
     try {
-        const {title, category, cover, content, readTime, author} = req.body;
+        const {title, category, content, readTime, author} = req.body;
         
         // Validate required fields
         if (!title || !category || !content || !author) {
             return res.status(400).json({ 
-                message: "Title, category, content and author are required" 
+                message: "I campi titolo, categoria, contenuto e autore sono obbligatori" 
+            });
+        }
+
+        // Check if file was uploaded
+        if (!req.file) {
+            return res.status(400).json({
+                message: "L'immagine di copertina è obbligatoria"
             });
         }
 
         const newPost = new Post({
             title,
             category,
-            cover,
+            cover: req.file.path,
             content,
             readTime,
             author
         });
 
         const savedPost = await newPost.save();
-        
-        // Populate author details before sending response
         const populatedPost = await savedPost.populate("author", "firstName lastName");
         
         res.status(201).json(populatedPost);
     } catch (error) {
         console.error('Error creating post:', error);
         res.status(500).json({ 
-            message: "Error creating post", 
+            message: "Errore durante la creazione del post", 
             error: error.message 
         });
     }

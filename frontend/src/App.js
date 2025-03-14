@@ -1,6 +1,5 @@
 import './App.css';
-import {Container, Row, Col, Navbar} from 'react-bootstrap';
-import {useState, useEffect} from 'react';
+import {Container} from 'react-bootstrap';
 import { AuthProvider } from './contexts/AuthContext';
 import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 import NavBar from './components/Navbar';
@@ -9,6 +8,8 @@ import Register from './pages/Register';
 import Home from './pages/Home';
 import CreatePost from './pages/CreatePost';
 import PostDetails from './pages/PostDetails';
+import MyPosts from './pages/MyPosts';
+import Profile from './pages/Profile';
 
 
 function App() {
@@ -27,6 +28,8 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/posts/create" element={<CreatePost />}/>
                 <Route path="/posts/:id" element={<PostDetails />} />
+                <Route path="/my-posts" element={<MyPosts />}/>
+                <Route path="/profile" element={<Profile />} />
               </Routes>
             </Container>
         </AuthProvider>

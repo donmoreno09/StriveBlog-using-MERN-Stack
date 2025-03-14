@@ -14,7 +14,7 @@ const Home = () => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:3001/posts?page=${currentPage}&limit=2`);
+        const response = await axios.get(`http://localhost:3001/posts?page=${currentPage}&limit=6`);
         setPosts(response.data.posts);
         setTotalPages(response.data.totalPages);
         setError(null);

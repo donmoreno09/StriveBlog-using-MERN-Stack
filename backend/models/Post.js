@@ -24,6 +24,7 @@ const postSchema = new mongoose.Schema({
         },
         unit: {
             type: String,
+            enum: ['minuti', 'ore'],
             required: true
         }
     },

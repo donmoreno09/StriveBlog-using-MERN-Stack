@@ -66,4 +66,28 @@ router.post("/login", async (req,res) => {
     }
 });
 
+//PUT
+router.put("/:id", async (req, res) => {
+    try {
+        const {firstName, lastName, currentPassword, newPassword} = req.body;
+        const user = await User.findById(req.params.id);
+        
+        if(!user){
+            return res.status(404).json({message: "Utente non trovato"});
+        }
+        
+        if(currentPassword && user.password !== currentPassword){
+            return res.status(401).json({message: "Password errata"});
+        }
+        
+        user.firstName = firstName;
+        user.lastName = lastName;
+        user.password = newPassword || currentPassword;
+        await user.save();        
+        res.json(userResponse);
+    } catch (error) {
+        res.status(500).json({error: error.message});
+    }
+});
+
 module.exports = router;
